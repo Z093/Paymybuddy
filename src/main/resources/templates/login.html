@@ -1,21 +1,23 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html xmlns:th="http://www.thymeleaf.org">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pay My Buddy - Connexion</title>
-  <link rel="stylesheet" href="Login.css">
+  <link rel="stylesheet" type="text/css" th:href="@{/css/login.css}">
 </head>
 <body>
 <div class="container">
   <div class="form-card">
     <button class="header-btn">Pay My Buddy</button>
-    <form action="/api/v1/login" method="POST">
-      <input type="email" name="email" placeholder="Mail" required>
+    <p th:if="${error}" th:text="${error}" style="color: red;"></p>
+
+    <form th:action="@{/api/v1/login}" method="post" th:object="${user}">
+      <input type="email" name="mail" placeholder="Mail" required>
       <input type="password" name="password" placeholder="Mot de passe" required>
       <button type="submit" class="submit-btn">Se connecter</button>
     </form>
   </div>
-</div>
 </body>
 </html>

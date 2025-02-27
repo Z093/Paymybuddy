@@ -1,0 +1,65 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+header {
+    background: white;
+    padding: 10px 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+nav {
+    display: flex;
+    align-items: center;
+}
+
+nav .logo {
+    font-weight: bold;
+    margin-right: auto;
+}
+
+nav a {
+    margin: 0 15px;
+    text-decoration: none;
+    color: black;
+}
+
+nav .active {
+    color: blue;
+}
+
+.container {
+    max-width: 400px;
+    margin: 200px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+input {
+    width: 80%;
+    padding: 8px;
+    margin-top: 10px;
+}
+
+button {
+    background-color: #f4a024;
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #e69500;
+}
+
+.success-message {
+    color: green;
+    font-weight: bold;
+}

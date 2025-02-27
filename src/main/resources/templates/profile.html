@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Profile - Pay My Buddy</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/profile.css}">
+</head>
+<body>
+
+<header>
+    <nav>
+        <span class="logo">Pay My Buddy</span>
+        <a href="transfer" class="active">Transférer</a>
+        <a href="profile">Profil</a>
+        <a href="add">Ajouter relation</a>
+        <a href="logout">Se déconnecter</a>
+    </nav>
+</header>
+
+<div class="container">
+    <div class="info">
+        <div><span>Username</span><span>@username</span></div>
+        <div><span>Mail</span><span>nom@domain.com</span></div>
+        <div><span>Mot de passe</span><span>mot de passe</span></div>
+    </div>
+    <button class="btn-modifier">Modifier</button>
+</div>
+</body>
+</html>

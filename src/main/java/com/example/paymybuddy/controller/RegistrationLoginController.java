@@ -1,5 +1,6 @@
 package com.example.paymybuddy.controller;
 
+
 import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -7,10 +8,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-@RestController
+/*@Controller
+//@RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor
 public class RegistrationLoginController {
@@ -20,26 +26,58 @@ public class RegistrationLoginController {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
+    // Afficher la page d'inscription
+    @GetMapping("/register")
+    public String register(Model model) {
+        model.addAttribute("user", new User());
+       return "register"; // Assurez-vous que "register" correspond au nom du fichier sans extension
+    }
 
-
+    // Gérer l'inscription
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@RequestBody User user) {
+    public String registerUser(@ModelAttribute User user, Model model) {
         if (userRepository.findByMail(user.getMail()) != null) {
-            return ResponseEntity.badRequest().body("mail already exists");
+            model.addAttribute("error", "L'email existe déjà !");
+            return "register"; // Retourne à la page d'inscription avec un message d'erreur
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        return ResponseEntity.ok(userRepository.save(user));
+        userRepository.save(user);
+        return "redirect:/api/v1/login"; // Redirection vers la page de connexion après inscription
     }
 
 
+    @GetMapping("/login")
+    public String login(Model model) {
+        model.addAttribute("user", new User());
+        return "login";
+    }
 
     @PostMapping("/login")
-    public ResponseEntity<?> loginUser(@RequestBody User user) {
+    public String loginUser(@ModelAttribute User user, Model model) {
         try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(user.getMail(), user.getPassword()));
-            return ResponseEntity.ok("Login successful");
-        } catch(Exception ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid mail or password");
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getMail(), user.getPassword())
+
+
+            );
+
+            if (authentication.isAuthenticated()) {
+                return "redirect:/api/v1/transfer";
+            } else {
+                model.addAttribute("error", "Email ou mot de passe incorrect !");
+                return "login";
+            }
+        } catch (AuthenticationException ex) {
+            model.addAttribute("error", "Email ou mot de passe incorrect !");
+            return "login";
         }
     }
-}
+
+
+    @GetMapping("/profile")
+    public String showProfilePage() {
+        return "profile";
+    }
+
+
+}*/

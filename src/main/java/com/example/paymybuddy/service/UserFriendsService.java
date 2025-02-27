@@ -2,27 +2,51 @@ package com.example.paymybuddy.service;
 
 import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.repository.UserFriendsRepository;
+import com.example.paymybuddy.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.logging.Logger;
 
 @Service
 public class UserFriendsService {
 
+    private static final Logger logger = Logger.getLogger(UserFriendsService.class.getName());
+
     @Autowired
     private UserFriendsRepository userFriendsRepository;
 
+    @Transactional
     public void addFriend(String userMail, String friendMail) {
-        User user = userFriendsRepository.findByMail(userMail)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        User friend = userFriendsRepository.findByMail(friendMail)
-                .orElseThrow(() -> new RuntimeException("Friend not found"));
+        logger.info("🔍 Tentative d'ajout d'ami : " + userMail + " → " + friendMail);
 
-        // Ajoutez le contact si ce n'est pas déjà un ami
+        if (userMail.equals(friendMail)) {
+            logger.warning("❌ L'utilisateur tente de s'ajouter lui-même !");
+            throw new RuntimeException("Vous ne pouvez pas vous ajouter vous-même !");
+        }
+
+        User user = userFriendsRepository.findByMail(userMail)
+                .orElseThrow(() -> {
+                    logger.warning("❌ Utilisateur non trouvé : " + userMail);
+                    return new RuntimeException("Utilisateur introuvable");
+                });
+
+        User friend = userFriendsRepository.findByMail(friendMail)
+                .orElseThrow(() -> {
+                    logger.warning("❌ Ami non trouvé : " + friendMail);
+                    return new RuntimeException("Ami introuvable");
+                });
+
         if (!user.getFriends().contains(friend)) {
             user.getFriends().add(friend);
+            friend.getFriends().add(user); // Ajout des deux côtés
             userFriendsRepository.save(user);
+            userFriendsRepository.save(friend);
+            logger.info("✅ Ami ajouté avec succès : " + userMail + " ↔ " + friendMail);
         } else {
-            throw new RuntimeException("This user is already a friend");
+            logger.warning("⚠️ Cet utilisateur est déjà un ami !");
+            throw new RuntimeException("Cet utilisateur est déjà votre ami");
         }
     }
 }

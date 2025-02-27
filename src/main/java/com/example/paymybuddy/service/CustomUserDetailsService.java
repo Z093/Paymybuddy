@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import java.util.Collections;
 
 
-@Service
+/*@Service
 @RequiredArgsConstructor
 public class CustomUserDetailsService implements UserDetailsService {
 
@@ -21,12 +21,25 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String mail) throws UsernameNotFoundException {
+        System.out.println("🔍 Tentative de connexion avec : " + mail);
         User user = userRepository.findByMail(mail);
 
         if (user == null) {
-            throw new UsernameNotFoundException("User not found with Mail" + mail);
+            System.out.println("❌ Utilisateur non trouvé !");
+            throw new UsernameNotFoundException("User not found with Mail: " + mail);
         }
-        return new org.springframework.security.core.userdetails.User(user.getMail(), user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(user.getRole())));
-    }
-}
+
+        String role = user.getRole();
+        if (role == null || role.isEmpty()) {
+            role = "ROLE_USER"; // Définit un rôle par défaut
+        }
+
+        System.out.println("✅ Utilisateur trouvé : " + user.getMail() + " | Rôle : " + user.getRole());
+        return new org.springframework.security.core.userdetails.User(
+                user.getMail(),
+                user.getPassword(),
+                Collections.singletonList(new SimpleGrantedAuthority(role))
+        );
+    }*/
+
+

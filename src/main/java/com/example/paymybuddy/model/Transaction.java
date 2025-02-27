@@ -25,6 +25,8 @@ public class Transaction {
 
     private double amount; // Montant du transfert
 
+    private String description;
+
     private LocalDateTime timestamp; // Date et heure de la transaction
 }
 
