@@ -15,7 +15,7 @@ public class UserFriendsService {
     private static final Logger logger = Logger.getLogger(UserFriendsService.class.getName());
 
     @Autowired
-    private UserFriendsRepository userFriendsRepository;
+    private UserRepository userRepository; // Utilisation de UserRepository au lieu de UserFriendsRepository
 
     @Transactional
     public void addFriend(String userMail, String friendMail) {
@@ -26,13 +26,13 @@ public class UserFriendsService {
             throw new RuntimeException("Vous ne pouvez pas vous ajouter vous-même !");
         }
 
-        User user = userFriendsRepository.findByMail(userMail)
+        User user = userRepository.findByMail(userMail)
                 .orElseThrow(() -> {
                     logger.warning("❌ Utilisateur non trouvé : " + userMail);
                     return new RuntimeException("Utilisateur introuvable");
                 });
 
-        User friend = userFriendsRepository.findByMail(friendMail)
+        User friend = userRepository.findByMail(friendMail)
                 .orElseThrow(() -> {
                     logger.warning("❌ Ami non trouvé : " + friendMail);
                     return new RuntimeException("Ami introuvable");
@@ -41,8 +41,8 @@ public class UserFriendsService {
         if (!user.getFriends().contains(friend)) {
             user.getFriends().add(friend);
             friend.getFriends().add(user); // Ajout des deux côtés
-            userFriendsRepository.save(user);
-            userFriendsRepository.save(friend);
+            userRepository.save(user);
+            userRepository.save(friend);
             logger.info("✅ Ami ajouté avec succès : " + userMail + " ↔ " + friendMail);
         } else {
             logger.warning("⚠️ Cet utilisateur est déjà un ami !");
@@ -50,3 +50,4 @@ public class UserFriendsService {
         }
     }
 }
+

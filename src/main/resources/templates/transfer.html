@@ -23,8 +23,9 @@
     <form th:action="@{/api/v1/transfer}" method="post" >
         <select name="receiverId" required>
             <option value="" disabled selected>Sélectionner une relation</option>
-            <option th:each="relation : ${relations}" th:value="${relation.id}" th:text="${relation.name}"></option>
+            <option th:each="friend : ${friends}" th:value="${friend.id}" th:text="${friend.username}"></option>
         </select>
+
 
         <input type="text" name="description" placeholder="Description" required>
 

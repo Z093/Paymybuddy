@@ -25,7 +25,7 @@ public class TransactionController {
     public String showTransferPage(@AuthenticationPrincipal User user, Model model) {
         if (user == null) {
             log.error("User is null in showTransferPage");
-            return "redirect:/login";
+            return "redirect:/api/v1/login";
         }
 
         log.info("User accessing transfer page: {}", user.getMail());
@@ -39,20 +39,20 @@ public class TransactionController {
 
     @PostMapping("/transfer")
     @ResponseBody
-    public ResponseEntity<?> makePayment(
+    public String makePayment(
             @AuthenticationPrincipal User sender,
             @RequestParam Long receiverId,
             @RequestParam double amount,
             @RequestParam String description) {
         try {
             if (sender == null) {
-                return ResponseEntity.badRequest().body("User not authenticated");
+                return "User not authenticated";
             }
             transactionService.makePayment(sender.getId(), receiverId, amount, description);
-            return ResponseEntity.ok("Transfer successful");
+            return "redirect:/api/v1/transfer";
         } catch (Exception e) {
             log.error("Transfer failed", e);
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return "Transfer failed: " + e.getMessage();
         }
     }
 }
