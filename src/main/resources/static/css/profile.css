@@ -65,3 +65,20 @@ nav .active {
     cursor: pointer;
     font-size: 16px;
 }
+
+.form-group {
+    display: flex;
+    align-items: center; /* Alignement vertical centré */
+    justify-content: space-between; /* Espacement entre label et input */
+    margin-bottom: 15px;
+}
+
+label {
+    width: 100px; /* Largeur fixe pour aligner correctement */
+    text-align: left;
+}
+
+input {
+    flex: 1; /* Prend tout l'espace disponible */
+    padding: 5px;
+}
