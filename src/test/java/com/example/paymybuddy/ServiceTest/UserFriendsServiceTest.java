@@ -1,7 +1,7 @@
 package com.example.paymybuddy.ServiceTest;
 
 import com.example.paymybuddy.model.User;
-import com.example.paymybuddy.repository.UserFriendsRepository;
+import com.example.paymybuddy.repository.UserRepository;
 import com.example.paymybuddy.service.UserFriendsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -9,117 +9,114 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-/*class UserFriendsServiceTest {
+class UserFriendsServiceTest {
 
     @Mock
-    private UserFriendsRepository userFriendsRepository;
+    private UserRepository userRepository;
 
     @InjectMocks
     private UserFriendsService userFriendsService;
 
+    private User user;
+    private User friend;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        // Configuration de l'utilisateur
+        user = new User();
+        user.setId(1L);
+        user.setUsername("user");
+        user.setMail("user@example.com");
+        user.setFriends(new ArrayList<>());
+
+        // Configuration d'un ami potentiel
+        friend = new User();
+        friend.setId(2L);
+        friend.setUsername("friend");
+        friend.setMail("friend@example.com");
+        friend.setFriends(new ArrayList<>());
+
+        // Configuration des mocks par défaut
+        when(userRepository.findByMail("user@example.com")).thenReturn(Optional.of(user));
+        when(userRepository.findByMail("friend@example.com")).thenReturn(Optional.of(friend));
     }
 
     @Test
-    void addFriend_Success() {
-        // Arrange
-        String userMail = "user@example.com";
-        String friendMail = "friend@example.com";
-
-        User user = new User();
-        user.setMail(userMail);
-        user.setFriends(new HashSet<User>()); // Utilisation d'un HashSet pour un Set<User>
-
-        User friend = new User();
-        friend.setMail(friendMail);
-
-        when(userFriendsRepository.findByMail(userMail)).thenReturn(Optional.of(user));
-        when(userFriendsRepository.findByMail(friendMail)).thenReturn(Optional.of(friend));
-
+    void addFriend_Success_ShouldAddFriendToUser() {
         // Act
-        userFriendsService.addFriend(userMail, friendMail);
+        userFriendsService.addFriend("user@example.com", "friend@example.com");
 
         // Assert
         assertTrue(user.getFriends().contains(friend));
-
-        verify(userFriendsRepository).save(user);
+        assertTrue(friend.getFriends().contains(user));
+        verify(userRepository).save(user);
+        verify(userRepository).save(friend);
     }
 
-
     @Test
-    void addFriend_UserNotFound() {
+    void addFriend_UserNotFound_ShouldThrowException() {
         // Arrange
-        String userMail = "user@example.com";
-        String friendMail = "friend@example.com";
-
-        when(userFriendsRepository.findByMail(userMail)).thenReturn(Optional.empty());
+        when(userRepository.findByMail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                userFriendsService.addFriend(userMail, friendMail)
-        );
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userFriendsService.addFriend("nonexistent@example.com", "friend@example.com");
+        });
 
-        assertEquals("User not found", exception.getMessage());
-
-        verify(userFriendsRepository, never()).save(any());
+        assertEquals("Utilisateur introuvable", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void addFriend_FriendNotFound() {
+    void addFriend_FriendNotFound_ShouldThrowException() {
         // Arrange
-        String userMail = "user@example.com";
-        String friendMail = "friend@example.com";
-
-        User user = new User();
-        user.setMail(userMail);
-        user.setFriends(new HashSet<User>());
-
-        when(userFriendsRepository.findByMail(userMail)).thenReturn(Optional.of(user));
-        when(userFriendsRepository.findByMail(friendMail)).thenReturn(Optional.empty());
+        when(userRepository.findByMail("friend@example.com")).thenReturn(Optional.empty());
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                userFriendsService.addFriend(userMail, friendMail)
-        );
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userFriendsService.addFriend("user@example.com", "friend@example.com");
+        });
 
-        assertEquals("Friend not found", exception.getMessage());
-
-        verify(userFriendsRepository, never()).save(any());
+        assertEquals("Ami introuvable", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    void addFriend_AlreadyAFriend() {
+    void addFriend_SameUserAndFriend_ShouldThrowException() {
+        // Act & Assert
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userFriendsService.addFriend("user@example.com", "user@example.com");
+        });
+
+        assertEquals("Vous ne pouvez pas vous ajouter vous-même !", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void addFriend_AlreadyFriends_ShouldThrowException() {
         // Arrange
-        String userMail = "user@example.com";
-        String friendMail = "friend@example.com";
-
-        User user = new User();
-        user.setMail(userMail);
-        user.setFriends(new HashSet<User>());// Correction : spécification du type
-
-        User friend = new User();
-        friend.setMail(friendMail);
-
+        // Ajouter l'ami à la liste des amis de l'utilisateur
         user.getFriends().add(friend);
 
-        when(userFriendsRepository.findByMail(userMail)).thenReturn(Optional.of(user));
-        when(userFriendsRepository.findByMail(friendMail)).thenReturn(Optional.of(friend));
+        // Ajouter l'utilisateur à la liste des amis de l'ami
+        friend.getFriends().add(user);
 
         // Act & Assert
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                userFriendsService.addFriend(userMail, friendMail)
-        );
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userFriendsService.addFriend("user@example.com", "friend@example.com");
+        });
 
-        assertEquals("This user is already a friend", exception.getMessage());
-
-        verify(userFriendsRepository, never()).save(any());
+        assertEquals("Cet utilisateur est déjà votre ami", exception.getMessage());
+        verify(userRepository, never()).save(any(User.class));
     }
-}*/
+}
