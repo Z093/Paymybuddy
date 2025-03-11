@@ -34,7 +34,7 @@ public class AuthService {
         userRepository.save(user);
 
         // Générer le token
-        String token = jwtService.generateToken(user);
+        String token = jwtService.generateToken(user, user.getMail());
 
         return new AuthResponse(token, "User registered successfully");
     }
@@ -42,6 +42,7 @@ public class AuthService {
     public AuthResponse loginUser(String mail, String password) {
         try {
             // Authentification
+            log.info("Attempting to login user {}", mail);
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(mail, password)
             );
@@ -52,7 +53,7 @@ public class AuthService {
             var user = userRepository.findByMail(mail)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
-            String token = jwtService.generateToken(user);
+            String token = jwtService.generateToken(user,mail);
             log.debug("Generated token for user: {}", mail);
 
             return new AuthResponse(token, "Login successful");

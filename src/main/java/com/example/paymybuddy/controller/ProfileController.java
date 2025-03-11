@@ -25,8 +25,8 @@ public class ProfileController {
 
     @GetMapping("/profile")
     public String showProfile(Model model, Principal principal) {
-        String email = principal.getName(); // Récupère l'email de l'utilisateur connecté
-        User user = userRepository.findByMail(email)
+        String mail = principal.getName(); // Récupère l'email de l'utilisateur connecté
+        User user = userRepository.findByMail(mail)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur non trouvé"));
         model.addAttribute("user", user);
         return "profile";
@@ -34,8 +34,8 @@ public class ProfileController {
 
     @PostMapping("/profile")
     public String updateUser(@ModelAttribute User updatedUser, Principal principal, RedirectAttributes redirectAttributes) {
-        String email = principal.getName(); // Récupère l'email de l'utilisateur connecté
-        return userRepository.findByMail(email).map(user -> {
+        String mail = principal.getName(); // Récupère l'email de l'utilisateur connecté
+        return userRepository.findByMail(mail).map(user -> {
             user.setUsername(updatedUser.getUsername());
             user.setMail(updatedUser.getMail());
             if (!updatedUser.getPassword().isEmpty()) {

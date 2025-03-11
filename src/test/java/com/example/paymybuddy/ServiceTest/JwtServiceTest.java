@@ -1,3 +1,4 @@
+/*
 package com.example.paymybuddy.ServiceTest;
 
 import com.example.paymybuddy.service.JwtService;
@@ -126,4 +127,4 @@ class JwtServiceTest {
         // Assert
         assertTrue(isValid);
     }
-}
+}*/

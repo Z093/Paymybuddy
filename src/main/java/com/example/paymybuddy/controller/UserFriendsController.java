@@ -1,5 +1,6 @@
 package com.example.paymybuddy.controller;
 
+import com.example.paymybuddy.Security.CustomUserDetails;
 import com.example.paymybuddy.service.UserFriendsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -26,9 +27,8 @@ public class UserFriendsController {
 
     private String getAuthenticatedUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof UserDetails) {
-            UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-            return userDetails.getUsername(); // Suppose que l'email est stocké comme username
+        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails customUserDetails) {
+            return customUserDetails.getUsername(); // Suppose que l'email est stocké comme username
         }
         return "anonymous";
     }

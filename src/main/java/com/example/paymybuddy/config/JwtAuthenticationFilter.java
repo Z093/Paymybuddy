@@ -1,6 +1,7 @@
 package com.example.paymybuddy.config;
 
 import com.example.paymybuddy.service.JwtService;
+import com.example.paymybuddy.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,6 +27,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
+    private final UserService userService;
 
     @Override
     protected void doFilterInternal(
@@ -45,6 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+
         // Vérifier le token dans la session d'abord
         HttpSession session = request.getSession(false);
         String token = session != null ? (String) session.getAttribute("token") : null;
@@ -61,10 +64,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (token != null) {
             try {
-                String userEmail = jwtService.extractUsername(token);
-                if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                    UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
-                    if (jwtService.isTokenValid(token, userDetails)) {
+                String mail = jwtService.extractUsername(token);
+                String username = userService.getUserByMail(mail).getUsername();
+                log.error("mail: {}", mail);
+                log.debug("username: {}", username);
+                if (mail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    UserDetails userDetails = this.userDetailsService.loadUserByUsername(mail);
+                    log.debug("userDetails: {}", userDetails.getUsername());
+                    if (jwtService.isTokenValid(token, userDetails, mail)) {
                         UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                                 userDetails,
                                 null,
@@ -72,7 +79,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         );
                         authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                         SecurityContextHolder.getContext().setAuthentication(authToken);
-                        log.debug("User authenticated: {}", userEmail);
+                        log.debug("User authenticated: {}", mail);
                     }
                 }
             } catch (Exception e) {

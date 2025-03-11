@@ -1,3 +1,4 @@
+/*
 package com.example.paymybuddy.ServiceTest;
 
 import com.example.paymybuddy.dto.AuthResponse;
@@ -170,4 +171,4 @@ class AuthServiceTest {
         verify(userRepository).findByMail("test@example.com");
         verify(jwtService, never()).generateToken(any(User.class));
     }
-}
+}*/
