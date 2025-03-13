@@ -1,15 +1,14 @@
 package com.example.paymybuddy.controller;
 
-import com.example.paymybuddy.Security.CustomUserDetails;
+import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.service.UserFriendsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 @RequestMapping("/api/v1")
@@ -25,17 +24,21 @@ public class UserFriendsController {
         return "addFriends";
     }
 
-    private String getAuthenticatedUserEmail() {
+    public String getAuthenticatedUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null && authentication.getPrincipal() instanceof CustomUserDetails customUserDetails) {
-            return customUserDetails.getUsername(); // Suppose que l'email est stocké comme username
+        if (authentication != null && authentication.isAuthenticated()) {
+            // Vérifier le type d'objet principal
+            Object principal = authentication.getPrincipal();
+            if (principal instanceof User user) {
+                return user.getMail();
+            }
         }
         return "anonymous";
     }
 
-
     @PostMapping("/add")
-    public String addFriend(@RequestParam String userEmail, @RequestParam String friendMail, Model model) {
+    public String addFriend(@RequestParam String friendMail, Model model) {
+        String userEmail = getAuthenticatedUserEmail();
         try {
             userFriendsService.addFriend(userEmail, friendMail);
             model.addAttribute("message", "Ami ajouté avec succès !");

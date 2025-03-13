@@ -1,6 +1,7 @@
 package com.example.paymybuddy.ControllerTest;
 
 import com.example.paymybuddy.controller.UserFriendsController;
+import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.service.UserFriendsService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,12 +11,9 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.ui.Model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 class UserFriendsControllerTest {
@@ -32,93 +30,123 @@ class UserFriendsControllerTest {
     @Mock
     private SecurityContext securityContext;
 
-    @Mock
-    private UserDetails userDetails;
-
     @InjectMocks
     private UserFriendsController userFriendsController;
-
-    private final String TEST_EMAIL = "test@example.com";
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-
-        // Configuration du SecurityContext mockito
         when(securityContext.getAuthentication()).thenReturn(authentication);
         SecurityContextHolder.setContext(securityContext);
-
-        // Configuration de l'authentification mockito
-        when(authentication.getPrincipal()).thenReturn(userDetails);
-
-        // Configuration des UserDetails mockito
-        when(userDetails.getUsername()).thenReturn(TEST_EMAIL);
     }
 
     @Test
-    void showAddFriendPage_AuthenticatedUser_ShouldReturnAddFriendsView() {
-        // Act
-        String viewName = userFriendsController.showAddFriendPage(model);
-
-        // Assert
-        assertEquals("addFriends", viewName);
-        verify(model).addAttribute("userEmail", TEST_EMAIL);
-    }
-
-    @Test
-    void showAddFriendPage_UnauthenticatedUser_ShouldUseAnonymous() {
+    void testShowAddFriendPage_AuthenticatedUser() {
         // Arrange
-        when(authentication.getPrincipal()).thenReturn("anonymousPrincipal"); // Non UserDetails
+        User mockUser = new User();
+        mockUser.setMail("test@example.com");
+        when(authentication.getPrincipal()).thenReturn(mockUser);
+        when(authentication.isAuthenticated()).thenReturn(true);
 
         // Act
         String viewName = userFriendsController.showAddFriendPage(model);
 
         // Assert
+        verify(model).addAttribute("userEmail", "test@example.com");
         assertEquals("addFriends", viewName);
+    }
+
+    @Test
+    void testShowAddFriendPage_NonUserPrincipal() {
+        // Arrange
+        when(authentication.getPrincipal()).thenReturn("anonymousUser");
+        when(authentication.isAuthenticated()).thenReturn(true);
+
+        // Act
+        String viewName = userFriendsController.showAddFriendPage(model);
+
+        // Assert
         verify(model).addAttribute("userEmail", "anonymous");
+        assertEquals("addFriends", viewName);
     }
 
     @Test
-    void showAddFriendPage_NullAuthentication_ShouldUseAnonymous() {
+    void testShowAddFriendPage_NotAuthenticated() {
         // Arrange
-        when(securityContext.getAuthentication()).thenReturn(null);
+        when(authentication.isAuthenticated()).thenReturn(false);
 
         // Act
         String viewName = userFriendsController.showAddFriendPage(model);
 
         // Assert
-        assertEquals("addFriends", viewName);
         verify(model).addAttribute("userEmail", "anonymous");
+        assertEquals("addFriends", viewName);
     }
 
     @Test
-    void addFriend_Success_ShouldReturnSuccessMessage() {
+    void testAddFriend_Success() {
         // Arrange
+        User mockUser = new User();
+        mockUser.setMail("test@example.com");
+        when(authentication.getPrincipal()).thenReturn(mockUser);
+        when(authentication.isAuthenticated()).thenReturn(true);
         String friendMail = "friend@example.com";
 
         // Act
-        String viewName = userFriendsController.addFriend(TEST_EMAIL, friendMail, model);
+        String viewName = userFriendsController.addFriend(friendMail, model);
 
         // Assert
-        assertEquals("addFriends", viewName);
-        verify(userFriendsService).addFriend(TEST_EMAIL, friendMail);
+        verify(userFriendsService).addFriend("test@example.com", friendMail);
         verify(model).addAttribute("message", "Ami ajouté avec succès !");
+        assertEquals("addFriends", viewName);
     }
 
     @Test
-    void addFriend_Failure_ShouldReturnErrorMessage() {
+    void testAddFriend_Exception() {
         // Arrange
+        User mockUser = new User();
+        mockUser.setMail("test@example.com");
+        when(authentication.getPrincipal()).thenReturn(mockUser);
+        when(authentication.isAuthenticated()).thenReturn(true);
         String friendMail = "friend@example.com";
-        String errorMessage = "L'utilisateur n'existe pas";
-        doThrow(new RuntimeException(errorMessage))
-                .when(userFriendsService).addFriend(anyString(), anyString());
+
+        // Configure the service to throw an exception
+        doThrow(new RuntimeException("L'ami n'existe pas")).when(userFriendsService).addFriend("test@example.com", friendMail);
 
         // Act
-        String viewName = userFriendsController.addFriend(TEST_EMAIL, friendMail, model);
+        String viewName = userFriendsController.addFriend(friendMail, model);
 
         // Assert
+        verify(userFriendsService).addFriend("test@example.com", friendMail);
+        verify(model).addAttribute("message", "Erreur : L'ami n'existe pas");
         assertEquals("addFriends", viewName);
-        verify(userFriendsService).addFriend(TEST_EMAIL, friendMail);
-        verify(model).addAttribute("message", "Erreur : " + errorMessage);
+    }
+
+    @Test
+    void testGetAuthenticatedUserEmail_UserPrincipal() {
+        // Arrange
+        User mockUser = new User();
+        mockUser.setMail("test@example.com");
+        when(authentication.getPrincipal()).thenReturn(mockUser);
+        when(authentication.isAuthenticated()).thenReturn(true);
+
+        // Act
+        String result = userFriendsController.getAuthenticatedUserEmail();
+
+        // Assert
+        assertEquals("test@example.com", result);
+    }
+
+    @Test
+    void testGetAuthenticatedUserEmail_NonUserPrincipal() {
+        // Arrange
+        when(authentication.getPrincipal()).thenReturn("anonymousUser");
+        when(authentication.isAuthenticated()).thenReturn(true);
+
+        // Act
+        String result = userFriendsController.getAuthenticatedUserEmail();
+
+        // Assert
+        assertEquals("anonymous", result);
     }
 }

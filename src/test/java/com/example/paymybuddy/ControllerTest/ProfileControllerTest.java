@@ -1,29 +1,28 @@
 package com.example.paymybuddy.ControllerTest;
 
+import com.example.paymybuddy.controller.ProfileController;
 import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.repository.UserRepository;
-import com.example.paymybuddy.controller.ProfileController;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.ui.Model;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.security.Principal;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
-class ProfileControllerTest {
+public class ProfileControllerTest {
 
     @Mock
     private UserRepository userRepository;
@@ -35,7 +34,10 @@ class ProfileControllerTest {
     private Model model;
 
     @Mock
-    private Principal principal;
+    private Authentication authentication;
+
+    @Mock
+    private SecurityContext securityContext;
 
     @Mock
     private RedirectAttributes redirectAttributes;
@@ -46,114 +48,155 @@ class ProfileControllerTest {
     private User testUser;
 
     @BeforeEach
-    void setUp() {
+    public void setup() {
         MockitoAnnotations.openMocks(this);
 
-        // Configuration du Principal mock
-        when(principal.getName()).thenReturn("test@example.com");
+        // Configuration du SecurityContext avec l'authentification mockée
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
 
         // Création d'un utilisateur de test
         testUser = new User();
         testUser.setId(1L);
-        testUser.setUsername("testUser");
+        testUser.setUsername("testuser");
         testUser.setMail("test@example.com");
         testUser.setPassword("encodedPassword");
-        testUser.setRole("USER");
-        testUser.setBalance(100.0);
     }
 
     @Test
-    void showProfile_UserFound_ShouldReturnProfileView() {
-        // Arrange
-        when(userRepository.findByMail("test@example.com")).thenReturn(Optional.of(testUser));
+    public void testShowProfile_WithUserPrincipal() {
+        // Configuration du mock pour le cas où authentication.getPrincipal() retourne un User
+        when(authentication.getPrincipal()).thenReturn(testUser);
+        when(userRepository.findByMail(testUser.getMail())).thenReturn(Optional.of(testUser));
 
-        // Act
-        String viewName = profileController.showProfile(model, principal);
+        // Exécution de la méthode à tester
+        String viewName = profileController.showProfile(model);
 
-        // Assert
+        // Vérifications
+        verify(model, times(1)).addAttribute("user", testUser);
         assertEquals("profile", viewName);
-        verify(model).addAttribute("user", testUser);
-        verify(userRepository).findByMail("test@example.com");
     }
 
     @Test
-    void showProfile_UserNotFound_ShouldThrowException() {
-        // Arrange
-        when(userRepository.findByMail("test@example.com")).thenReturn(Optional.empty());
+    public void testShowProfile_WithStringPrincipal() {
+        // Configuration du mock pour le cas où authentication.getPrincipal() retourne un String
+        when(authentication.getPrincipal()).thenReturn("not_a_user_object");
+        when(authentication.getName()).thenReturn(testUser.getMail());
+        when(userRepository.findByMail(testUser.getMail())).thenReturn(Optional.of(testUser));
 
-        // Act & Assert
+        // Exécution de la méthode à tester
+        String viewName = profileController.showProfile(model);
+
+        // Vérifications
+        verify(model, times(1)).addAttribute("user", testUser);
+        assertEquals("profile", viewName);
+    }
+
+    @Test
+    public void testShowProfile_UserNotFound() {
+        // Configuration du mock
+        when(authentication.getPrincipal()).thenReturn("not_a_user_object");
+        when(authentication.getName()).thenReturn("nonexistent@example.com");
+        when(userRepository.findByMail("nonexistent@example.com")).thenReturn(Optional.empty());
+
+        // Vérification que l'exception est lancée
         assertThrows(UsernameNotFoundException.class, () -> {
-            profileController.showProfile(model, principal);
+            profileController.showProfile(model);
         });
-        verify(userRepository).findByMail("test@example.com");
     }
 
     @Test
-    void updateUser_WithPasswordChange_ShouldUpdateAndRedirect() {
-        // Arrange
+    public void testUpdateUser_Success() {
+        // Utilisateur mis à jour
         User updatedUser = new User();
         updatedUser.setUsername("updatedUsername");
         updatedUser.setMail("updated@example.com");
         updatedUser.setPassword("newPassword");
 
-        when(userRepository.findByMail("test@example.com")).thenReturn(Optional.of(testUser));
+        // Configuration du mock
+        when(authentication.getPrincipal()).thenReturn("not_a_user_object");
+        when(authentication.getName()).thenReturn(testUser.getMail());
+        when(userRepository.findByMail(testUser.getMail())).thenReturn(Optional.of(testUser));
         when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
 
-        // Act
-        String result = profileController.updateUser(updatedUser, principal, redirectAttributes);
+        // Exécution de la méthode à tester
+        String viewName = profileController.updateUser(updatedUser, redirectAttributes);
 
-        // Assert
-        assertEquals("redirect:/api/v1/profile", result);
-        verify(userRepository).findByMail("test@example.com");
-        verify(userRepository).save(testUser);
-        verify(passwordEncoder).encode("newPassword");
-        verify(redirectAttributes).addFlashAttribute("message", "Profil mis à jour avec succès !");
-
-        // Vérifier que les propriétés de l'utilisateur ont été mises à jour
+        // Vérifications
+        verify(userRepository, times(1)).save(testUser);
+        verify(redirectAttributes, times(1)).addFlashAttribute("message", "Profil mis à jour avec succès !");
+        assertEquals("redirect:/api/v1/profile", viewName);
         assertEquals("updatedUsername", testUser.getUsername());
         assertEquals("updated@example.com", testUser.getMail());
         assertEquals("encodedNewPassword", testUser.getPassword());
     }
 
     @Test
-    void updateUser_WithoutPasswordChange_ShouldNotEncodePassword() {
-        // Arrange
+    public void testUpdateUser_EmptyPassword() {
+        // Utilisateur mis à jour avec mot de passe vide
         User updatedUser = new User();
         updatedUser.setUsername("updatedUsername");
         updatedUser.setMail("updated@example.com");
-        updatedUser.setPassword(""); // Pas de changement de mot de passe
+        updatedUser.setPassword(""); // Mot de passe vide
 
-        when(userRepository.findByMail("test@example.com")).thenReturn(Optional.of(testUser));
+        // Configuration du mock
+        when(authentication.getPrincipal()).thenReturn("not_a_user_object");
+        when(authentication.getName()).thenReturn(testUser.getMail());
+        when(userRepository.findByMail(testUser.getMail())).thenReturn(Optional.of(testUser));
 
-        // Act
-        String result = profileController.updateUser(updatedUser, principal, redirectAttributes);
+        // Exécution de la méthode à tester
+        String viewName = profileController.updateUser(updatedUser, redirectAttributes);
 
-        // Assert
-        assertEquals("redirect:/api/v1/profile", result);
-        verify(userRepository).findByMail("test@example.com");
-        verify(userRepository).save(testUser);
-        verify(passwordEncoder, never()).encode(anyString()); // Vérifier que l'encodeur n'a jamais été appelé
-        verify(redirectAttributes).addFlashAttribute("message", "Profil mis à jour avec succès !");
-
-        // Vérifier que les propriétés de l'utilisateur ont été mises à jour (sauf le mot de passe)
+        // Vérifications
+        verify(userRepository, times(1)).save(testUser);
+        verify(passwordEncoder, never()).encode(anyString()); // Vérifier que l'encodeur n'est pas appelé
+        verify(redirectAttributes, times(1)).addFlashAttribute("message", "Profil mis à jour avec succès !");
+        assertEquals("redirect:/api/v1/profile", viewName);
         assertEquals("updatedUsername", testUser.getUsername());
         assertEquals("updated@example.com", testUser.getMail());
         assertEquals("encodedPassword", testUser.getPassword()); // Le mot de passe reste inchangé
     }
 
     @Test
-    void updateUser_UserNotFound_ShouldRedirectWithError() {
-        // Arrange
+    public void testUpdateUser_UserNotFound() {
+        // Utilisateur mis à jour
         User updatedUser = new User();
-        when(userRepository.findByMail("test@example.com")).thenReturn(Optional.empty());
+        updatedUser.setUsername("updatedUsername");
+        updatedUser.setMail("updated@example.com");
+        updatedUser.setPassword("newPassword");
 
-        // Act
-        String result = profileController.updateUser(updatedUser, principal, redirectAttributes);
+        // Configuration du mock pour un utilisateur non trouvé
+        when(authentication.getPrincipal()).thenReturn("not_a_user_object");
+        when(authentication.getName()).thenReturn("nonexistent@example.com");
+        when(userRepository.findByMail("nonexistent@example.com")).thenReturn(Optional.empty());
 
-        // Assert
-        assertEquals("redirect:/api/v1/profile?error", result);
-        verify(userRepository).findByMail("test@example.com");
-        verify(userRepository, never()).save(any(User.class));
-        verifyNoInteractions(redirectAttributes); // Pas d'interaction avec redirectAttributes
+        // Exécution de la méthode à tester
+        String viewName = profileController.updateUser(updatedUser, redirectAttributes);
+
+        // Vérifications
+        verify(userRepository, never()).save(any());
+        assertEquals("redirect:/api/v1/profile?error", viewName);
+    }
+
+    @Test
+    public void testUpdateUser_WithUserPrincipal() {
+        // Utilisateur mis à jour
+        User updatedUser = new User();
+        updatedUser.setUsername("updatedUsername");
+        updatedUser.setMail("updated@example.com");
+        updatedUser.setPassword("newPassword");
+
+        // Configuration du mock pour le cas où authentication.getPrincipal() retourne un User
+        when(authentication.getPrincipal()).thenReturn(testUser);
+        when(userRepository.findByMail(testUser.getMail())).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.encode("newPassword")).thenReturn("encodedNewPassword");
+
+        // Exécution de la méthode à tester
+        String viewName = profileController.updateUser(updatedUser, redirectAttributes);
+
+        // Vérifications
+        verify(userRepository, times(1)).save(testUser);
+        verify(redirectAttributes, times(1)).addFlashAttribute("message", "Profil mis à jour avec succès !");
+        assertEquals("redirect:/api/v1/profile", viewName);
     }
 }

@@ -1,33 +1,37 @@
 package com.example.paymybuddy.Security;
 
+import com.example.paymybuddy.model.User;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+
 import java.util.Collection;
 
 public class CustomUserDetails implements UserDetails {
-    private String mail;
-    private String password;
-    private Collection<? extends GrantedAuthority> authorities;
 
-    public CustomUserDetails(String mail, String password, Collection<? extends GrantedAuthority> authorities) {
-        this.mail = mail;
-        this.password = password;
-        this.authorities = authorities;
+    private final User user;
+
+    public CustomUserDetails(User user) {
+        this.user = user;
+    }
+
+    public User getUser() {
+        return user;
     }
 
     @Override
     public String getUsername() {
-        return mail; // On utilise l'email comme identifiant
+        return user.getMail();
     }
 
     @Override
     public String getPassword() {
-        return password;
+        return user.getPassword();
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        return user.getAuthorities();
     }
 
     @Override
@@ -49,9 +53,4 @@ public class CustomUserDetails implements UserDetails {
     public boolean isEnabled() {
         return true;
     }
-
-    public String getEmail() {
-        return mail;
-    }
 }
-
