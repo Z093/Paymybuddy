@@ -1,7 +1,6 @@
 package com.example.paymybuddy.Security;
 
 import com.example.paymybuddy.model.User;
-import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 

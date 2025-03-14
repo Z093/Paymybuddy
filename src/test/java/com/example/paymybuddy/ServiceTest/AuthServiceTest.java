@@ -1,21 +1,17 @@
-/*
-package com.example.paymybuddy.ServiceTest;
+package com.example.paymybuddy.service;
 
 import com.example.paymybuddy.dto.AuthResponse;
 import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.repository.UserRepository;
-import com.example.paymybuddy.service.AuthService;
-import com.example.paymybuddy.service.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Optional;
@@ -25,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
 
     @Mock
@@ -46,129 +43,111 @@ class AuthServiceTest {
     private AuthService authService;
 
     private User testUser;
-    private final String TEST_TOKEN = "test-jwt-token";
+    private final String TEST_EMAIL = "test@example.com";
+    private final String TEST_PASSWORD = "password123";
+    private final String ENCODED_PASSWORD = "encodedPassword123";
+    private final String JWT_TOKEN = "jwt.token.here";
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
-
-        // Réinitialiser le SecurityContext avant chaque test
-        SecurityContextHolder.clearContext();
-
-        // Configuration de l'utilisateur de test
         testUser = new User();
-        testUser.setId(1L);
-        testUser.setUsername("testUser");
-        testUser.setMail("test@example.com");
-        testUser.setPassword("rawPassword");
-        testUser.setRole("USER");
-        testUser.setBalance(100.0);
-
-        // Configuration des mocks par défaut
-        when(passwordEncoder.encode(anyString())).thenReturn("encodedPassword");
-        when(jwtService.generateToken(any(User.class))).thenReturn(TEST_TOKEN);
+        testUser.setMail(TEST_EMAIL);
+        testUser.setPassword(TEST_PASSWORD);
     }
 
     @Test
-    void register_Success_ShouldReturnAuthResponse() {
+    void register_ShouldRegisterNewUser_WhenEmailNotExists() {
         // Arrange
-        when(userRepository.existsByMail(anyString())).thenReturn(false);
+        when(userRepository.existsByMail(TEST_EMAIL)).thenReturn(false);
+        when(passwordEncoder.encode(TEST_PASSWORD)).thenReturn(ENCODED_PASSWORD);
+        when(jwtService.generateToken(any(User.class), eq(TEST_EMAIL))).thenReturn(JWT_TOKEN);
 
         // Act
         AuthResponse response = authService.register(testUser);
 
         // Assert
-        assertNotNull(response);
-        assertEquals(TEST_TOKEN, response.getToken());
+        assertEquals(JWT_TOKEN, response.getToken());
         assertEquals("User registered successfully", response.getMessage());
 
-        verify(passwordEncoder).encode("rawPassword");
+        verify(userRepository).existsByMail(TEST_EMAIL);
+        verify(passwordEncoder).encode(TEST_PASSWORD);
         verify(userRepository).save(testUser);
-        verify(jwtService).generateToken(testUser);
+        verify(jwtService).generateToken(testUser, TEST_EMAIL);
 
-        // Vérifier que le mot de passe a été encodé
-        assertEquals("encodedPassword", testUser.getPassword());
+        assertEquals(ENCODED_PASSWORD, testUser.getPassword());
     }
 
     @Test
-    void register_EmailAlreadyExists_ShouldThrowException() {
+    void register_ShouldThrowException_WhenEmailExists() {
         // Arrange
-        when(userRepository.existsByMail("test@example.com")).thenReturn(true);
+        when(userRepository.existsByMail(TEST_EMAIL)).thenReturn(true);
 
         // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            authService.register(testUser);
-        });
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> authService.register(testUser)
+        );
 
         assertEquals("Email already exists", exception.getMessage());
-        verify(userRepository).existsByMail("test@example.com");
+        verify(userRepository).existsByMail(TEST_EMAIL);
         verify(userRepository, never()).save(any(User.class));
-        verify(passwordEncoder, never()).encode(anyString());
-        verify(jwtService, never()).generateToken(any(User.class));
+        verify(jwtService, never()).generateToken(any(User.class), anyString());
     }
 
     @Test
-    void loginUser_Success_ShouldReturnAuthResponse() {
+    void loginUser_ShouldLoginUser_WhenCredentialsAreValid() {
         // Arrange
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
-        when(userRepository.findByMail("test@example.com")).thenReturn(Optional.of(testUser));
+        when(userRepository.findByMail(TEST_EMAIL)).thenReturn(Optional.of(testUser));
+        when(jwtService.generateToken(testUser, TEST_EMAIL)).thenReturn(JWT_TOKEN);
 
         // Act
-        AuthResponse response = authService.loginUser("test@example.com", "password123");
+        AuthResponse response = authService.loginUser(TEST_EMAIL, TEST_PASSWORD);
 
         // Assert
-        assertNotNull(response);
-        assertEquals(TEST_TOKEN, response.getToken());
+        assertEquals(JWT_TOKEN, response.getToken());
         assertEquals("Login successful", response.getMessage());
 
-        // Vérifier que l'authentification a été effectuée
-        verify(authenticationManager).authenticate(
-                new UsernamePasswordAuthenticationToken("test@example.com", "password123"));
-        verify(userRepository).findByMail("test@example.com");
-        verify(jwtService).generateToken(testUser);
-
-        // Vérifier que le SecurityContext a été mis à jour
-        assertEquals(authentication, SecurityContextHolder.getContext().getAuthentication());
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(userRepository).findByMail(TEST_EMAIL);
+        verify(jwtService).generateToken(testUser, TEST_EMAIL);
     }
 
     @Test
-    void loginUser_InvalidCredentials_ShouldThrowException() {
+    void loginUser_ShouldThrowException_WhenCredentialsAreInvalid() {
         // Arrange
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
-                .thenThrow(new BadCredentialsException("Bad credentials"));
+                .thenThrow(new RuntimeException("Authentication failed"));
 
         // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            authService.loginUser("test@example.com", "wrongPassword");
-        });
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> authService.loginUser(TEST_EMAIL, TEST_PASSWORD)
+        );
 
         assertEquals("Invalid credentials", exception.getMessage());
-        verify(authenticationManager).authenticate(
-                new UsernamePasswordAuthenticationToken("test@example.com", "wrongPassword"));
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(userRepository, never()).findByMail(anyString());
-        verify(jwtService, never()).generateToken(any(User.class));
-
-        // Vérifier que le SecurityContext n'a pas été mis à jour
-        assertNull(SecurityContextHolder.getContext().getAuthentication());
+        verify(jwtService, never()).generateToken(any(User.class), anyString());
     }
 
     @Test
-    void loginUser_UserNotFound_ShouldThrowException() {
+    void loginUser_ShouldThrowException_WhenUserNotFound() {
         // Arrange
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
-        when(userRepository.findByMail("test@example.com")).thenReturn(Optional.empty());
+        when(userRepository.findByMail(TEST_EMAIL)).thenReturn(Optional.empty());
 
         // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            authService.loginUser("test@example.com", "password123");
-        });
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> authService.loginUser(TEST_EMAIL, TEST_PASSWORD)
+        );
 
         assertEquals("Invalid credentials", exception.getMessage());
-        verify(authenticationManager).authenticate(
-                new UsernamePasswordAuthenticationToken("test@example.com", "password123"));
-        verify(userRepository).findByMail("test@example.com");
-        verify(jwtService, never()).generateToken(any(User.class));
+        verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
+        verify(userRepository).findByMail(TEST_EMAIL);
+        verify(jwtService, never()).generateToken(any(User.class), anyString());
     }
-}*/
+}

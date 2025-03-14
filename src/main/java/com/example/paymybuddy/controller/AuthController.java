@@ -1,14 +1,12 @@
 package com.example.paymybuddy.controller;
 
-import com.example.paymybuddy.dto.LoginRequest;
-import com.example.paymybuddy.dto.RegisterRequest;
+
 import com.example.paymybuddy.dto.AuthResponse;
 import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.service.AuthService;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -43,7 +41,7 @@ public class AuthController {
             newUser.setRole("USER");
             newUser.setBalance(100.0);
 
-            AuthResponse response = authService.register(newUser);
+            //AuthResponse response = authService.register(newUser);
             return "redirect:/api/v1/login";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
