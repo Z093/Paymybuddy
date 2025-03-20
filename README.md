@@ -67,7 +67,8 @@ Le diagramme UML décrit l'architecture globale du projet et les interactions en
 ### Modèle Physique de Données (MPD)
 Le MPD représente la structure des tables et les relations dans la base de données.
 
-![Modèle Physique de Données](chemin/vers/modele_physique_donnees.png)
+![Modèle Physique de Données](https://github.com/user-attachments/assets/a28a93a4-258f-44fd-bbbb-ea86af308789)
+
 
 ## Fonctionnalités principales
 - Création et connexion d'un compte utilisateur
