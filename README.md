@@ -83,7 +83,9 @@ L’application suit les standards **WCAG** pour garantir une accessibilité opt
 
 ## Contact
 Avinash - Chef de projet
+
 Anja - UI/UX Designer
+
 Guto - Développeur base de données
 
 Merci de respecter les bonnes pratiques de code et la documentation fournie ! 🚀
