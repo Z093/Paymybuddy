@@ -61,7 +61,8 @@ pay-my-buddy/
 ### Diagramme UML
 Le diagramme UML décrit l'architecture globale du projet et les interactions entre les différentes entités. 
 
-![Diagramme UML](https://github.com/user-attachments/files/19314906/Diagramme%2BUML%2B-%2BPay%2BMy%2BBuddy.pdf)
+![Diagramme+UML+-+Pay+My+Buddy_page-0001](https://github.com/user-attachments/assets/0630d8be-7001-4a99-b3ce-f087767b654a)
+
 
 
 ### Modèle Physique de Données (MPD)
