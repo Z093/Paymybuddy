@@ -86,6 +86,7 @@ class AuthControllerTest {
         user.setPassword("password123");
 
         String errorMessage = "Email already exists";
+
         when(authService.register(any(User.class))).thenThrow(new RuntimeException(errorMessage));
 
         // Act
@@ -95,6 +96,7 @@ class AuthControllerTest {
         assertEquals("register", viewName);
         verify(model).addAttribute("error", errorMessage);
     }
+
 
     @Test
     void loginUser_Success_ShouldRedirectToTransfer() {
