@@ -1,7 +1,8 @@
 package com.example.paymybuddy.controller;
 
 
-import com.example.paymybuddy.dto.AuthResponse;
+
+import com.example.paymybuddy.dto.AuthReponse;
 import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.service.AuthService;
 import jakarta.servlet.http.HttpSession;
@@ -41,7 +42,7 @@ public class AuthController {
             newUser.setRole("USER");
             newUser.setBalance(100.0);
 
-            //AuthResponse response = authService.register(newUser);
+            AuthReponse response = authService.register(newUser);
             return "redirect:/api/v1/login";
         } catch (Exception e) {
             model.addAttribute("error", e.getMessage());
@@ -55,7 +56,7 @@ public class AuthController {
                             HttpSession session,
                             Model model) {
         try {
-            AuthResponse response = authService.loginUser(mail, password);
+            AuthReponse response = authService.loginUser(mail, password);
             session.setAttribute("token", response.getToken());
             return "redirect:/api/v1/transfer";
         } catch (Exception e) {
@@ -63,5 +64,4 @@ public class AuthController {
             return "login";
         }
     }
-
 }

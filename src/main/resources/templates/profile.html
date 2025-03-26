@@ -22,14 +22,22 @@
         <form th:action="@{/api/v1/profile}" th:object="${user}" method="post">
             <input type="hidden" name="_method" value="put"/> <!-- Simule un PUT avec Thymeleaf -->
 
-            <label>Username</label>
-            <input type="text" th:field="*{username}" required>
+            <div class="form-group">
+                <label>Username</label>
+                <input type="text" th:field="*{username}" required>
+            </div>
 
-            <label>Mail</label>
-            <input type="email" th:field="*{mail}" required>
+            <div class="form-group">
+                <label>Mail</label>
+                <input type="email" th:field="*{mail}" required>
+            </div>
 
-            <label>Mot de passe</label>
-            <input type="password" th:field="*{password}" required>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" th:field="*{password}" required>
+            </div>
+
+
     </div>
     <button class="btn-modifier">Modifier</button>
 </div>

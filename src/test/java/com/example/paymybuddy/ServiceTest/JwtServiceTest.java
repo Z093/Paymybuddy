@@ -1,6 +1,5 @@
 package com.example.paymybuddy.ServiceTest;
 
-
 import com.example.paymybuddy.service.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

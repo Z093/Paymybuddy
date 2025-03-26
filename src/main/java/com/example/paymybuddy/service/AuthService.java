@@ -1,6 +1,7 @@
 package com.example.paymybuddy.service;
 
-import com.example.paymybuddy.dto.AuthResponse;
+
+import com.example.paymybuddy.dto.AuthReponse;
 import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +23,7 @@ public class AuthService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
-    public AuthResponse register(User user) {
+    public AuthReponse register(User user) {
         if (userRepository.existsByMail(user.getMail())) {
             throw new RuntimeException("Email already exists");
         }
@@ -36,10 +37,10 @@ public class AuthService {
         // Générer le token
         String token = jwtService.generateToken(user, user.getMail());
 
-        return new AuthResponse(token, "User registered successfully");
+        return new AuthReponse(token, "User registered successfully");
     }
 
-    public AuthResponse loginUser(String mail, String password) {
+    public AuthReponse loginUser(String mail, String password) {
         try {
             // Authentification
             log.info("Attempting to login user {}", mail);
@@ -56,7 +57,7 @@ public class AuthService {
             String token = jwtService.generateToken(user,mail);
             log.debug("Generated token for user: {}", mail);
 
-            return new AuthResponse(token, "Login successful");
+            return new AuthReponse(token, "Login successful");
         } catch (Exception e) {
             log.error("Login failed for user: {}", mail, e);
             throw new RuntimeException("Invalid credentials");

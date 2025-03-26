@@ -1,7 +1,7 @@
 package com.example.paymybuddy.ControllerTest;
 
 import com.example.paymybuddy.controller.AuthController;
-import com.example.paymybuddy.dto.AuthResponse;
+import com.example.paymybuddy.dto.AuthReponse;
 import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.service.AuthService;
 import jakarta.servlet.http.HttpSession;
@@ -64,7 +64,7 @@ class AuthControllerTest {
         user.setMail("test@example.com");
         user.setPassword("password123");
 
-        AuthResponse mockResponse = new AuthResponse();
+        AuthReponse mockResponse = new AuthReponse();
         mockResponse.setToken("test-token");
         when(authService.register(any(User.class))).thenReturn(mockResponse);
 
@@ -86,7 +86,6 @@ class AuthControllerTest {
         user.setPassword("password123");
 
         String errorMessage = "Email already exists";
-
         when(authService.register(any(User.class))).thenThrow(new RuntimeException(errorMessage));
 
         // Act
@@ -97,14 +96,13 @@ class AuthControllerTest {
         verify(model).addAttribute("error", errorMessage);
     }
 
-
     @Test
     void loginUser_Success_ShouldRedirectToTransfer() {
         // Arrange
         String mail = "test@example.com";
         String password = "password123";
 
-        AuthResponse mockResponse = new AuthResponse();
+        AuthReponse mockResponse = new AuthReponse();
         mockResponse.setToken("test-token");
         when(authService.loginUser(mail, password)).thenReturn(mockResponse);
 

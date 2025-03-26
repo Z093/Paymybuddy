@@ -1,6 +1,6 @@
 package com.example.paymybuddy.service;
 
-import com.example.paymybuddy.dto.AuthResponse;
+import com.example.paymybuddy.dto.AuthReponse;
 import com.example.paymybuddy.model.User;
 import com.example.paymybuddy.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,7 +63,7 @@ class AuthServiceTest {
         when(jwtService.generateToken(any(User.class), eq(TEST_EMAIL))).thenReturn(JWT_TOKEN);
 
         // Act
-        AuthResponse response = authService.register(testUser);
+        AuthReponse response = authService.register(testUser);
 
         // Assert
         assertEquals(JWT_TOKEN, response.getToken());
@@ -103,7 +103,7 @@ class AuthServiceTest {
         when(jwtService.generateToken(testUser, TEST_EMAIL)).thenReturn(JWT_TOKEN);
 
         // Act
-        AuthResponse response = authService.loginUser(TEST_EMAIL, TEST_PASSWORD);
+        AuthReponse response = authService.loginUser(TEST_EMAIL, TEST_PASSWORD);
 
         // Assert
         assertEquals(JWT_TOKEN, response.getToken());

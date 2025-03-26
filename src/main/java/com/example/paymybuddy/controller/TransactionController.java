@@ -48,7 +48,7 @@ public class TransactionController {
                 return "User not authenticated";
             }
             transactionService.makePayment(sender.getId(), receiverId, amount, description);
-            return "redirect:/api/v1/transfer";
+            return "transfer";
         } catch (Exception e) {
             log.error("Transfer failed", e);
             return "Transfer failed: " + e.getMessage();

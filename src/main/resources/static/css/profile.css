@@ -1,94 +1,84 @@
-/* Style global */
 body {
     font-family: Arial, sans-serif;
+    text-align: center;
     margin: 0;
     padding: 0;
-    background-color: #f8f8f8;
 }
 
-/* Barre de navigation */
-nav {
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    padding: 15px 20px;
-    background-color: white;
+header {
+    background: white;
+    padding: 10px 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.logo {
+nav {
+    display: flex;
+    align-items: center;
+}
+
+nav .logo {
     font-weight: bold;
     margin-right: auto;
 }
 
 nav a {
-    margin-left: 20px;
+    margin: 0 15px;
     text-decoration: none;
     color: black;
 }
 
-nav a.active {
+nav .active {
+    color: blue;
+}
+
+.active {
     color: blue;
     font-weight: bold;
 }
 
-/* Conteneur principal */
 .container {
-    width: 40%;
-    margin: 50px auto;
-    background: white;
-    padding: 30px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 200px auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 2px 2px 12px rgba(0, 0, 0, 0.1);
 }
 
 .info {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+    margin-bottom: 20px;
 }
 
-.info .field {
+.info div {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #ddd;
 }
 
-.info label {
-    font-weight: bold;
-    margin-right: 10px;
-    white-space: nowrap;
-}
-
-.info input {
-    flex: 1;
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    background-color: #f8f8f8;
-}
-
-.info input:focus {
-    border-color: #007bff;
-    background-color: white;
-    outline: none;
-}
-
-/* Bouton Modifier */
 .btn-modifier {
-    display: block;
-    width: fit-content;
-    padding: 10px 20px;
-    background-color: #f9a825;
+    background-color: #f4a000;
     color: white;
     border: none;
+    padding: 10px 20px;
     border-radius: 5px;
-    font-size: 16px;
-    margin: 20px auto 0;
     cursor: pointer;
+    font-size: 16px;
 }
 
-.btn-modifier:hover {
-    background-color: #f57c00;
+.form-group {
+    display: flex;
+    align-items: center; /* Alignement vertical centré */
+    justify-content: space-between; /* Espacement entre label et input */
+    margin-bottom: 15px;
+}
+
+label {
+    width: 100px; /* Largeur fixe pour aligner correctement */
+    text-align: left;
+}
+
+input {
+    flex: 1; /* Prend tout l'espace disponible */
+    padding: 5px;
 }
