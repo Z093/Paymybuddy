@@ -40,7 +40,7 @@ public class AuthService {
         return new AuthReponse(token, "User registered successfully");
     }
 
-    public AuthReponse loginUser(String mail, String password) {
+    public AuthReponse loginUser(String mail, String password)  {
         try {
             // Authentification
             log.info("Attempting to login user {}", mail);
