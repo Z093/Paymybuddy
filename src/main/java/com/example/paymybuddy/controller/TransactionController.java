@@ -1,7 +1,9 @@
 package com.example.paymybuddy.controller;
 
+import com.example.paymybuddy.exception.UserNotFoundException;
 import com.example.paymybuddy.model.Transaction;
 import com.example.paymybuddy.model.User;
+import com.example.paymybuddy.repository.UserRepository;
 import com.example.paymybuddy.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,13 +21,19 @@ import java.util.List;
 public class TransactionController {
 
     private final TransactionService transactionService;
+    private final UserRepository userRepository;
+
 
     @GetMapping("/transfer")
-    public String showTransferPage(@AuthenticationPrincipal User user, Model model) {
-        if (user == null) {
+    public String showTransferPage(@AuthenticationPrincipal User userPrincipal, Model model) {
+        if (userPrincipal == null) {
             log.error("User is null in showTransferPage");
             return "redirect:/api/v1/login";
         }
+
+        // Recharger l'utilisateur à jour depuis la base
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
 
         log.info("User accessing transfer page: {}", user.getMail());
 
